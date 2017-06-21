@@ -138,6 +138,7 @@ func New(o *O) *App {
 // Router returns a new mux router which can be used to start an app.
 func (a *App) Router() *mux.Router {
 	r := mux.NewRouter()
+	r.Handle("/api/status", a.newAnonHandler(a.Status)).Methods("GET")
 	r.Handle("/api/projects", a.newAuthHandler(a.IndexProject)).Methods("GET")
 	r.Handle("/api/projects/{pid}", a.newProjectAuthHandler(a.UpdateProject)).Methods("PATCH")
 	r.Handle("/api/projects/{pid}", a.newProjectAuthHandler(a.ShowProject)).Methods("GET")
@@ -176,4 +177,13 @@ func (a *App) newProjectAuthHandler(f func(w http.ResponseWriter, r *http.Reques
 	n.Use(a.AuthProject())
 	n.UseHandlerFunc(f)
 	return n
+}
+
+// Status is an http handler for a GET request to check the status of the service
+func (a *App) Status(w http.ResponseWriter, req *http.Request) {
+	if err := a.S.Ping(); err != nil {
+		a.R.JSON(w, http.StatusInternalServerError, &Response{Status: "Error", Message: err.Error()})
+		return
+	}
+	a.R.JSON(w, http.StatusOK, nil)
 }
