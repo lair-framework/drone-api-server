@@ -554,13 +554,13 @@ func (a *App) UpdateProject(w http.ResponseWriter, req *http.Request) {
 				}
 			}
 
+			service.Status = docService.Status
+			if !a.IsValidStatus(service.Status) {
+				service.Status = lair.StatusGrey
+			}
 			if !knownPort {
 				id := bson.NewObjectId().Hex()
 				service.ID = id
-				service.Status = docService.Status
-				if !a.IsValidStatus(service.Status) {
-					service.Status = lair.StatusGrey
-				}
 				msg := fmt.Sprintf(
 					"%s - New service found: %d/%s (%s)",
 					time.Now().String(),
